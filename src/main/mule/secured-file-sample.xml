@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d90cad73-c706-4e5b-af43-8aeee84a0e49" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="fb70558e-8209-4600-bdb1-6318c2aae236" file="appname-${mule.env}.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="5eddd1b8-74bc-4d2e-a0fd-9f2ce80b7e2e" file="appname-secure-${mule.env}.yaml" key="${mule.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<flow name="secured-file-sampleFlow" doc:id="8b5bb018-8dcd-4cb8-b53e-f6fff2fbd77b" >
+		<http:listener doc:name="Listener" doc:id="56af093c-e8d6-4d96-a253-a517b1bb0fde" config-ref="HTTP_Listener_config" path="/secure"/>
+		<logger level="INFO" doc:name="Logger" doc:id="03dae95c-904a-498a-8fa4-11892c78d027" message="${mule.env} properties are ${http.port}, ${http.host},${secure::client_secret} and ${secure::client_id}"/>
+		<ee:transform doc:name="Transform Message" doc:id="12710267-2e30-4a48-b098-a2a74e31b338">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"env" :  p('mule.env'),
+	 "port" : p('http.port'),
+	 "host": p('http.port'),
+	  "secret": p('secure::client_secret'),
+	   "id": p('secure::client_id')
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
